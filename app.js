@@ -3,8 +3,8 @@ angular
   .controller('IncreaseLimitController', ['$scope', function($scope) {
     $scope.value = 100;
   }])
-  .directive('currencyNoCents', ['$locale', '$parse', '$filter', function($locale, $parse, $filter) {
-    return {
+  .directive('currencyNoCents', ['$parse', '$filter', function ($parse, $filter) {
+      return {
       restrict: 'A',
       require: 'ngModel',
       scope: {
@@ -13,7 +13,7 @@ angular
       },
       link: function(scope, element, attrs, ctrl) {
 
-        function clear(value) {
+        function clear (value) {
           if (!value) {
             return 0;
           }
@@ -34,11 +34,11 @@ angular
 
         function validation(value) {
           if (scope.max) {
-              ctrl.$setValidity("max", parseInt(value) <= parseInt(scope.max));
+              ctrl.$setValidity('max', parseInt(value) <= parseInt(scope.max));
           }
 
           if (scope.min) {
-              ctrl.$setValidity("min", parseInt(value) >= parseInt(scope.min));
+              ctrl.$setValidity('min', parseInt(value) >= parseInt(scope.min));
           }
         }
 
@@ -57,20 +57,24 @@ angular
           return value;
         });
 
+
         ctrl.$parsers.push(function(inputValue) {
-          var value = clear(inputValue);
-          var lastValue = clear(ctrl.$$lastCommittedViewValue);
 
-          var actualNumber = parseInt(lastValue) / 100;
+          var unformattedViewValueWithZeros = clear(inputValue);
 
-          if (ctrl.$modelValue && (lastValue < ctrl.$modelValue)) {
-            // adding
-            var reminder = actualNumber % 1;
-  					actualNumber -= reminder;
-          } else if (ctrl.$modelValue === 0 && lastValue < 10) {
-            actualNumber = lastValue;
+          // removing zeros from unformattedViewValueWithZeros to get the actual value
+          var actualNumber = unformattedViewValueWithZeros / 100;
+
+          if (ctrl.$modelValue && (actualNumber < ctrl.$modelValue)) {
+            // deleting
+  		      actualNumber -= actualNumber % 1;
+
+          } else if (ctrl.$modelValue === 0 && unformattedViewValueWithZeros < 10) {
+            // single unit
+            actualNumber = unformattedViewValueWithZeros;
+
           } else {
-            //subtracting
+            // writing
             var reminder = actualNumber % 1;
 
             actualNumber -= reminder;
@@ -82,7 +86,7 @@ angular
 
           var formattedValue = format(actualNumber);
 
-          if (lastValue != formattedValue) {
+          if (inputValue !== formattedValue) {
             render(formattedValue);
           }
 
@@ -90,4 +94,4 @@ angular
         });
       }
     };
-  }]);
+}]);
